@@ -71,11 +71,12 @@ jobs:
       - name: Download uv binaries for Linux
         if: matrix.platform == 'linux'
         run: pnpm run uv:download:linux
-
+        
       # macOS specific steps
       # --publish never: prevent electron-builder from auto-publishing to GitHub.
       # All artifacts are collected and published atomically in the publish job.
-      - name: Build macOS
+      # Note: If code signing secrets are not configured, build unsigned app for testing
+      - name: Build macOS (with code signing if available)
         if: matrix.platform == 'mac'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,7 +88,15 @@ jobs:
         run: |
           ulimit -n 65536
           echo "File descriptor limit: $(ulimit -n)"
-          pnpm run build:vite && pnpm exec zx scripts/bundle-openclaw.mjs && pnpm exec zx scripts/bundle-openclaw-plugins.mjs && pnpm exec electron-builder --mac --publish never
+          pnpm run build:vite && pnpm exec zx scripts/bundle-openclaw.mjs && pnpm exec zx scripts/bundle-openclaw-plugins.mjs
+          # Check if code signing certificate is available
+          if [ -n "$CSC_LINK" ] && [ -n "$CSC_KEY_PASSWORD" ]; then
+            echo "Building with code signing..."
+            pnpm exec electron-builder --mac --publish never
+          else
+            echo "Code signing certificate not configured, building unsigned app..."
+            pnpm exec electron-builder --mac --publish never --config.mac.identity=null
+          fi
 
       # Windows specific steps
       - name: Build Windows
