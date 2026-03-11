@@ -4,8 +4,9 @@ import 'zx/globals';
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const UV_VERSION = '0.10.0';
-const BASE_URL = `https://github.com/astral-sh/uv/releases/download/${UV_VERSION}`;
+const GITHUB_BASE = `https://github.com/astral-sh/uv/releases/download/${UV_VERSION}`;
 const OUTPUT_BASE = path.join(ROOT_DIR, 'resources', 'bin');
+const FETCH_TIMEOUT_MS = 60000;
 
 // Mapping Node platforms/archs to uv release naming
 const TARGETS = {
@@ -52,7 +53,7 @@ async function setupTarget(id) {
   const targetDir = path.join(OUTPUT_BASE, id);
   const tempDir = path.join(ROOT_DIR, 'temp_uv_extract');
   const archivePath = path.join(ROOT_DIR, target.filename);
-  const downloadUrl = `${BASE_URL}/${target.filename}`;
+  const downloadUrl = `${GITHUB_BASE}/${target.filename}`;
 
   echo(chalk.blue`\n📦 Setting up uv for ${id}...`);
 
@@ -63,25 +64,51 @@ async function setupTarget(id) {
   await fs.ensureDir(tempDir);
 
   try {
-    // Download
-    echo`⬇️ Downloading: ${downloadUrl}`;
-    const response = await fetch(downloadUrl);
-    if (!response.ok) throw new Error(`Failed to download: ${response.statusText}`);
-    const buffer = await response.arrayBuffer();
-    await fs.writeFile(archivePath, Buffer.from(buffer));
+    // Download (try mirrors first if UV_MIRROR!=0; useful when GitHub is slow/unreachable)
+    const mirrors = [
+      'https://ghproxy.net/',
+      'https://ghpro.xyz/',
+      'https://ghproxy.com/',
+    ];
+    const urls = process.env.UV_MIRROR === '0'
+      ? [downloadUrl]
+      : [...mirrors.map((m) => m + downloadUrl), downloadUrl];
+    let lastErr;
+    for (const url of urls) {
+      try {
+        echo`⬇️ Downloading: ${url}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const buffer = await response.arrayBuffer();
+        await fs.writeFile(archivePath, Buffer.from(buffer));
+        lastErr = null;
+        break;
+      } catch (e) {
+        lastErr = e;
+        echo(chalk.yellow`   Retry with next URL...`);
+      }
+    }
+    if (lastErr) throw lastErr;
 
-    // Extract
+    // Extract (use Node/PS on Windows to avoid bash/WSL dependency)
     echo`📂 Extracting...`;
+    const { execFileSync } = await import('child_process');
     if (target.filename.endsWith('.zip')) {
       if (os.platform() === 'win32') {
-        const { execFileSync } = await import('child_process');
         const psCommand = `Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${archivePath.replace(/'/g, "''")}', '${tempDir.replace(/'/g, "''")}')`;
         execFileSync('powershell.exe', ['-NoProfile', '-Command', psCommand], { stdio: 'inherit' });
       } else {
         await $`unzip -q -o ${archivePath} -d ${tempDir}`;
       }
     } else {
-      await $`tar -xzf ${archivePath} -C ${tempDir}`;
+      if (os.platform() === 'win32') {
+        execFileSync('tar', ['-xzf', archivePath, '-C', tempDir], { stdio: 'inherit' });
+      } else {
+        await $`tar -xzf ${archivePath} -C ${tempDir}`;
+      }
     }
 
     // Move binary

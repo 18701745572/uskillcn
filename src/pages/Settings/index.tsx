@@ -73,6 +73,8 @@ export function Settings() {
     setAutoDownloadUpdate,
     devModeUnlocked,
     setDevModeUnlocked,
+    skillRegistry,
+    setSkillRegistry,
   } = useSettingsStore();
 
   const { status: gatewayStatus, restart: restartGateway } = useGatewayStore();
@@ -431,6 +433,49 @@ export function Settings() {
                       {lang.label}
                     </Button>
                   ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Separator className="bg-black/5 dark:bg-white/5" />
+
+          {/* Skills */}
+          <div>
+            <h2 className="text-3xl font-serif text-foreground mb-6 font-normal tracking-tight" style={{ fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif' }}>
+              {t('skills.title')}
+            </h2>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <Label className="text-[15px] font-medium text-foreground/80">{t('skills.registry')}</Label>
+                <p className="text-[13px] text-muted-foreground">
+                  {t('skills.registryDesc')}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={skillRegistry === 'clawhub' ? 'secondary' : 'outline'}
+                    className={cn(
+                      'rounded-full px-5 h-10 border-black/10 dark:border-white/10',
+                      skillRegistry === 'clawhub'
+                        ? 'bg-black/5 dark:bg-white/10 text-foreground'
+                        : 'bg-transparent text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5'
+                    )}
+                    onClick={() => setSkillRegistry('clawhub')}
+                  >
+                    {t('skills.registryClawhub')}
+                  </Button>
+                  <Button
+                    variant={skillRegistry === 'uskill' ? 'secondary' : 'outline'}
+                    className={cn(
+                      'rounded-full px-5 h-10 border-black/10 dark:border-white/10',
+                      skillRegistry === 'uskill'
+                        ? 'bg-black/5 dark:bg-white/10 text-foreground'
+                        : 'bg-transparent text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5'
+                    )}
+                    onClick={() => setSkillRegistry('uskill')}
+                  >
+                    {t('skills.registryUskill')}
+                  </Button>
                 </div>
               </div>
             </div>

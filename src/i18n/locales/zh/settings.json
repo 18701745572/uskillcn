@@ -107,6 +107,13 @@
       "requestingCode": "正在获取安全登录码..."
     }
   },
+  "skills": {
+    "title": "技能",
+    "registry": "技能来源",
+    "registryDesc": "选择技能搜索与安装来源。ClawHub 为默认；uskill.cn 提供中文技能生态。",
+    "registryClawhub": "ClawHub",
+    "registryUskill": "uskill.cn"
+  },
   "gateway": {
     "title": "网关",
     "description": "OpenClaw 网关设置",

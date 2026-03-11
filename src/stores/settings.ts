@@ -39,6 +39,9 @@ interface SettingsState {
   // Setup
   setupComplete: boolean;
 
+  // Skills
+  skillRegistry: 'clawhub' | 'uskill';
+
   // Actions
   init: () => Promise<void>;
   setTheme: (theme: Theme) => void;
@@ -59,6 +62,7 @@ interface SettingsState {
   setSidebarCollapsed: (value: boolean) => void;
   setDevModeUnlocked: (value: boolean) => void;
   markSetupComplete: () => void;
+  setSkillRegistry: (registry: 'clawhub' | 'uskill') => void;
   resetSettings: () => void;
 }
 
@@ -86,6 +90,7 @@ const defaultSettings = {
   sidebarCollapsed: false,
   devModeUnlocked: false,
   setupComplete: false,
+  skillRegistry: 'clawhub' as const,
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -143,6 +148,13 @@ export const useSettingsStore = create<SettingsState>()(
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
       setDevModeUnlocked: (devModeUnlocked) => set({ devModeUnlocked }),
       markSetupComplete: () => set({ setupComplete: true }),
+      setSkillRegistry: (skillRegistry) => {
+        set({ skillRegistry });
+        void hostApiFetch('/api/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ skillRegistry }),
+        }).catch(() => {});
+      },
       resetSettings: () => set(defaultSettings),
     }),
     {

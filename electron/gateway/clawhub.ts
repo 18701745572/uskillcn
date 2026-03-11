@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { app, shell } from 'electron';
 import { getOpenClawConfigDir, ensureDir, getClawHubCliBinPath, getClawHubCliEntryPath, quoteForCmd } from '../utils/paths';
+import { getSetting } from '../utils/store';
 
 export interface ClawHubSearchParams {
     query: string;
@@ -71,6 +72,9 @@ export class ClawHubService {
      * Run a ClawHub CLI command
      */
     private async runCommand(args: string[]): Promise<string> {
+        const skillRegistry = await getSetting('skillRegistry').catch(() => 'clawhub' as const);
+        const useUskill = skillRegistry === 'uskill';
+
         return new Promise((resolve, reject) => {
             if (this.useNodeRunner && !fs.existsSync(this.cliEntryPath)) {
                 reject(new Error(`ClawHub CLI entry not found at: ${this.cliEntryPath}`));
@@ -89,23 +93,25 @@ export class ClawHubService {
             const isWin = process.platform === 'win32';
             const useShell = isWin && !this.useNodeRunner;
             const { NODE_OPTIONS: _nodeOptions, ...baseEnv } = process.env;
-            const env = {
+            const env: Record<string, string> = {
                 ...baseEnv,
                 CI: 'true',
                 FORCE_COLOR: '0',
+                CLAWHUB_WORKDIR: this.workDir,
             };
             if (this.useNodeRunner) {
                 env.ELECTRON_RUN_AS_NODE = '1';
+            }
+            if (useUskill) {
+                env.CLAWHUB_REGISTRY = 'https://uskill.cn';
+                env.CLAWHUB_SITE = 'https://uskill.cn';
             }
             const spawnCmd = useShell ? quoteForCmd(this.cliPath) : this.cliPath;
             const spawnArgs = useShell ? commandArgs.map(a => quoteForCmd(a)) : commandArgs;
             const child = spawn(spawnCmd, spawnArgs, {
                 cwd: this.workDir,
                 shell: useShell,
-                env: {
-                    ...env,
-                    CLAWHUB_WORKDIR: this.workDir,
-                },
+                env,
                 windowsHide: true,
             });
 

@@ -83,6 +83,43 @@ uskillcn-{version}-{os}-{arch}.{ext}
 
 ## 发布构建（含自动更新）
 
+### 方式一：GitHub Actions 自动发布（推荐）
+
+推送 tag 时自动构建并发布到 GitHub Releases 和阿里云 OSS：
+
+```bash
+# 1. 更新版本号（可选，或手动改 package.json）
+pnpm version 0.1.25-alpha.0
+
+# 2. 推送 tag 触发 CI
+git push origin v0.1.25-alpha.0
+```
+
+**流程说明**：
+
+- **触发**：`git push` 以 `v*` 开头的 tag（如 `v0.1.24-alpha.9`）
+- **构建**：在 macOS、Windows、Linux 三端并行构建
+- **发布**：
+  - GitHub Releases：安装包作为 Release 附件
+  - 阿里云 OSS：用于应用内自动更新及官网下载
+
+**所需 Secrets**（GitHub 仓库 Settings → Secrets and variables → Actions）：
+
+| Secret | 说明 |
+|--------|------|
+| `GITHUB_TOKEN` | 自动提供，无需配置 |
+| `OSS_ACCESS_KEY_ID` | 阿里云 OSS AccessKey |
+| `OSS_ACCESS_KEY_SECRET` | 阿里云 OSS AccessKey |
+| `MAC_CERTS` | macOS 代码签名证书（base64） |
+| `MAC_CERTS_PASSWORD` | 证书密码 |
+| `APPLE_ID` | Apple 开发者账号 |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App 专用密码 |
+| `APPLE_TEAM_ID` | Apple Team ID |
+
+> macOS 签名相关 Secrets 可留空，此时 macOS 构建会跳过签名；若未配置 OSS，可注释或移除 `upload-oss` job。
+
+### 方式二：本地发布
+
 ```bash
 pnpm run release
 ```

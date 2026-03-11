@@ -51,6 +51,10 @@ export interface AppSettings {
   selectedBundles: string[];
   enabledSkills: string[];
   disabledSkills: string[];
+
+  // Skills
+  /** Skill registry: 'clawhub' = clawhub.ai, 'uskill' = uskill.cn */
+  skillRegistry: 'clawhub' | 'uskill';
 }
 
 /**
@@ -88,6 +92,9 @@ const defaults: AppSettings = {
   selectedBundles: ['productivity', 'developer'],
   enabledSkills: [],
   disabledSkills: [],
+
+  // Skills
+  skillRegistry: 'clawhub',
 };
 
 /**

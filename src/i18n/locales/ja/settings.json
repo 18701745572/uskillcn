@@ -106,6 +106,13 @@
       "requestingCode": "セキュアログインコードを取得中..."
     }
   },
+  "skills": {
+    "title": "スキル",
+    "registry": "スキルレジストリ",
+    "registryDesc": "スキルの検索・インストール元を選択。ClawHub がデフォルト。uskill.cn は中国語スキルエコシステムを提供。",
+    "registryClawhub": "ClawHub",
+    "registryUskill": "uskill.cn"
+  },
   "gateway": {
     "title": "ゲートウェイ",
     "description": "OpenClaw ゲートウェイ設定",

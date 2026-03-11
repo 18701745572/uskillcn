@@ -107,6 +107,13 @@
       "requestingCode": "Requesting secure login code..."
     }
   },
+  "skills": {
+    "title": "Skills",
+    "registry": "Skill Registry",
+    "registryDesc": "Choose where to search and install skills from. ClawHub is the default; uskill.cn offers Chinese skill ecosystem.",
+    "registryClawhub": "ClawHub",
+    "registryUskill": "uskill.cn"
+  },
   "gateway": {
     "title": "Gateway",
     "description": "OpenClaw Gateway settings",
