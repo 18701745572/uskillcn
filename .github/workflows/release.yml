@@ -71,7 +71,7 @@ jobs:
       - name: Download uv binaries for Linux
         if: matrix.platform == 'linux'
         run: pnpm run uv:download:linux
-
+        
       # macOS specific steps
       # --publish never: prevent electron-builder from auto-publishing to GitHub.
       # All artifacts are collected and published atomically in the publish job.
